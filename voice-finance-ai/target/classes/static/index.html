@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente Financeiro por Voz | Spring AI & Spring Boot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-dark: #0f172a;
+            --surface-dark: #1e293b;
+            --surface-card: #182234;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            padding: 20px 28px;
+            border-radius: 16px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+        }
+
+        .logo-title h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-title p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .badge-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #34d399;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #34d399;
+        }
+
+        /* Metrics Row */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary);
+        }
+
+        .metric-card.balance::before { background: linear-gradient(90deg, #6366f1, #3b82f6); }
+        .metric-card.income::before { background: #10b981; }
+        .metric-card.expense::before { background: #ef4444; }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .metric-card.income .metric-value { color: #34d399; }
+        .metric-card.expense .metric-value { color: #f87171; }
+
+        /* Main Content Layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Voice Panel */
+        .voice-card {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .voice-interactive-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 32px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .mic-button {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .mic-button:hover {
+            transform: scale(1.06);
+            box-shadow: 0 12px 30px rgba(79, 70, 229, 0.6);
+        }
+
+        .mic-button.recording {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            animation: pulse-mic 1.5s infinite;
+        }
+
+        @keyframes pulse-mic {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 22px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .mic-label {
+            margin-top: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .mic-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Quick Pills */
+        .quick-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .prompt-pill {
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid var(--border-color);
+            color: #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .prompt-pill:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Chat & Trace Area */
+        .trace-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .trace-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .trace-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            width: fit-content;
+        }
+
+        .badge-stt { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-tool { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-tts { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+
+        .trace-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #e2e8f0;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+
+        /* Audio Player Bar */
+        .audio-player-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+        }
+
+        audio {
+            width: 100%;
+            height: 38px;
+        }
+
+        /* Budget Categories Progress */
+        .budget-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .budget-item {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .budget-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .budget-item-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .budget-item-values {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(51, 65, 85, 0.6);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.4s ease;
+        }
+
+        /* Transactions Table */
+        .transactions-card {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .transactions-card h2 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px 12px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+        }
+
+        .tx-income { color: #34d399; font-weight: 600; }
+        .tx-expense { color: #f87171; font-weight: 600; }
+
+        /* Text Input Fallback */
+        .text-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .text-input-group input {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: white;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .text-input-group input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-send {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-send:hover {
+            background: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon">🎙️</div>
+            <div class="logo-title">
+                <h1>Sofia Finance AI</h1>
+                <p>Assistente Inteligente de Orçamento com Spring Boot & Spring AI</p>
+            </div>
+        </div>
+        <div class="badge-status">
+            <span class="status-dot"></span>
+            <span>API Online & Pronta</span>
+        </div>
+    </header>
+
+    <!-- Metrics Row -->
+    <div class="metrics-grid">
+        <div class="metric-card balance">
+            <div class="metric-header">
+                <span>SALDO CONSOLIDADO</span>
+                <span>💳</span>
+            </div>
+            <div class="metric-value" id="netBalance">R$ 0,00</div>
+        </div>
+        <div class="metric-card income">
+            <div class="metric-header">
+                <span>TOTAL DE RECEITAS</span>
+                <span>📈</span>
+            </div>
+            <div class="metric-value" id="totalIncome">R$ 0,00</div>
+        </div>
+        <div class="metric-card expense">
+            <div class="metric-header">
+                <span>TOTAL DE DESPESAS</span>
+                <span>📉</span>
+            </div>
+            <div class="metric-value" id="totalExpense">R$ 0,00</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-grid">
+        <!-- Voice Assistant Panel -->
+        <div class="voice-card">
+            <h2 style="font-size: 16px; font-weight: 700;">Comando de Voz & IA</h2>
+
+            <!-- Voice Zone -->
+            <div class="voice-interactive-zone">
+                <button class="mic-button" id="micBtn" title="Clique para gravar seu comando de voz">
+                    🎙️
+                </button>
+                <div class="mic-label" id="micStatus">Clique no microfone para falar</div>
+                <div class="mic-hint" id="micTimer">Ex: "Gastei 45 reais no almoço hoje"</div>
+            </div>
+
+            <!-- Quick Suggestions -->
+            <div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">SUGESTÕES RÁPIDAS DE COMANDO:</div>
+                <div class="quick-prompts">
+                    <span class="prompt-pill" onclick="sendQuickText('Gastei 52 reais no almoço hoje')">🍔 Gastei 52 reais no almoço</span>
+                    <span class="prompt-pill" onclick="sendQuickText('Quanto ainda posso gastar em alimentação?')">📊 Limite de Alimentação</span>
+                    <span class="prompt-pill" onclick="sendQuickText('Qual é o meu saldo atual?')">💰 Qual meu saldo?</span>
+                    <span class="prompt-pill" onclick="sendQuickText('Recebi 1200 reais de freelance')">💵 Recebi 1200 de freelance</span>
+                    <span class="prompt-pill" onclick="sendQuickText('Gastei 150 de gasolina')">🚗 Gastei 150 de gasolina</span>
+                    <span class="prompt-pill" onclick="sendQuickText('Me dá um resumo geral do mês')">📑 Resumo Geral</span>
+                </div>
+            </div>
+
+            <!-- Text Input Fallback -->
+            <div class="text-input-group">
+                <input type="text" id="textInput" placeholder="Ou digite um comando financeiro aqui..." onkeypress="handleKeyPress(event)">
+                <button class="btn-send" onclick="sendTextMessage()">Enviar</button>
+            </div>
+
+            <!-- AI Trace & Response -->
+            <div class="trace-card" id="traceContainer" style="display: none;">
+                <!-- STT -->
+                <div class="trace-item" id="traceSttBox">
+                    <div class="trace-badge badge-stt">🎤 Transcrição (Whisper STT)</div>
+                    <div class="trace-text" id="traceTranscription">...</div>
+                </div>
+
+                <!-- Tools Executed -->
+                <div class="trace-item" id="traceToolsBox">
+                    <div class="trace-badge badge-tool">⚡ Ferramentas Acionadas (Tool Calling @Tool)</div>
+                    <div class="trace-text" id="traceTools" style="font-family: monospace; font-size: 12px; color: #fde047;">...</div>
+                </div>
+
+                <!-- Assistant Response -->
+                <div class="trace-item">
+                    <div class="trace-badge badge-tts">🤖 Resposta da Assistente (ChatClient + TTS)</div>
+                    <div class="trace-text" id="traceReply">...</div>
+                </div>
+
+                <!-- Audio Player -->
+                <div class="audio-player-box" id="audioPlayerBox" style="display: none;">
+                    <audio id="audioPlayer" controls autoplay></audio>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget & Categories Panel -->
+        <div class="voice-card">
+            <h2 style="font-size: 16px; font-weight: 700; display: flex; justify-content: space-between;">
+                <span>Limites & Orçamento Mensal</span>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">Status por Categoria</span>
+            </h2>
+
+            <div class="budget-list" id="budgetList">
+                <div style="color: var(--text-muted); font-size: 13px;">Carregando categorias...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions Table -->
+    <div class="transactions-card">
+        <h2>
+            <span>Últimas Movimentações Financeiras</span>
+            <button onclick="loadFinancialData()" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;">Atualizar 🔄</button>
+        </h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Data</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando dados...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '';
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let timerInterval = null;
+    let secondsElapsed = 0;
+
+    const micBtn = document.getElementById('micBtn');
+    const micStatus = document.getElementById('micStatus');
+    const micTimer = document.getElementById('micTimer');
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+        loadFinancialData();
+        setupMicrophone();
+    });
+
+    function formatCurrency(val) {
+        if (val === undefined || val === null) return 'R$ 0,00';
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    }
+
+    async function loadFinancialData() {
+        try {
+            const res = await fetch(`${API_BASE}/api/finance/summary`);
+            if (res.ok) {
+                const data = await res.json();
+                renderSummary(data);
+            }
+        } catch (e) {
+            console.error('Erro ao buscar dados financeiros:', e);
+        }
+    }
+
+    function renderSummary(data) {
+        document.getElementById('netBalance').textContent = formatCurrency(data.netBalance);
+        document.getElementById('totalIncome').textContent = formatCurrency(data.totalIncome);
+        document.getElementById('totalExpense').textContent = formatCurrency(data.totalExpense);
+
+        // Orçamentos
+        const budgetContainer = document.getElementById('budgetList');
+        if (data.categoryBudgets && data.categoryBudgets.length > 0) {
+            budgetContainer.innerHTML = data.categoryBudgets.map(b => {
+                let barColor = '#10b981'; // green
+                if (b.percentageUsed >= 90) barColor = '#ef4444'; // red
+                else if (b.percentageUsed >= 70) barColor = '#f59e0b'; // yellow
+
+                const pctClamped = Math.min(b.percentageUsed, 100);
+
+                return `
+                    <div class="budget-item">
+                        <div class="budget-item-top">
+                            <div class="budget-item-name">
+                                <span>${b.categoryIcon}</span>
+                                <span>${b.categoryName}</span>
+                                ${b.overBudget ? '<span style="color:#ef4444; font-size:11px; font-weight:700;">[ESTOURADO]</span>' : ''}
+                            </div>
+                            <div class="budget-item-values">
+                                <strong>${formatCurrency(b.currentSpent)}</strong> / ${formatCurrency(b.monthlyLimit)}
+                                (${b.percentageUsed.toFixed(1)}%)
+                            </div>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${pctClamped}%; background-color: ${barColor};"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Tabela de transações
+        const tbody = document.getElementById('transactionsBody');
+        if (data.recentTransactions && data.recentTransactions.length > 0) {
+            tbody.innerHTML = data.recentTransactions.map(tx => {
+                const isIncome = tx.type === 'INCOME';
+                const formattedDate = tx.date ? new Date(tx.date).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-';
+                return `
+                    <tr>
+                        <td>${tx.categoryIcon} ${tx.categoryName}</td>
+                        <td><strong>${tx.description}</strong></td>
+                        <td><span style="font-size:11px; padding:2px 8px; border-radius:4px; background:${isIncome ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}; color:${isIncome ? '#34d399' : '#f87171'}">${isIncome ? 'Receita' : 'Despesa'}</span></td>
+                        <td style="color:var(--text-muted); font-size:12px;">${formattedDate}</td>
+                        <td class="${isIncome ? 'tx-income' : 'tx-expense'}">${isIncome ? '+' : '-'} ${formatCurrency(tx.amount)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    // Configuração do Microfone e Gravação
+    async function setupMicrophone() {
+        micBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+    }
+
+    async function startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunks = [];
+            
+            // Preferência de formatos suportados pelo navegador
+            let options = { mimeType: 'audio/webm' };
+            if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                options = { mimeType: 'audio/mp4' };
+            }
+
+            mediaRecorder = new MediaRecorder(stream, options);
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    audioChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                sendVoiceAudio(audioBlob);
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            micBtn.classList.add('recording');
+            micStatus.textContent = 'Gravando... Clique para concluir';
+            secondsElapsed = 0;
+            micTimer.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+                const secs = String(secondsElapsed % 60).padStart(2, '0');
+                micTimer.textContent = `${mins}:${secs}`;
+            }, 1000);
+
+        } catch (err) {
+            console.error('Permissão de microfone negada ou indisponível:', err);
+            micStatus.textContent = 'Permissão de microfone negada. Use o campo de texto abaixo.';
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            clearInterval(timerInterval);
+            micStatus.textContent = 'Processando na IA...';
+            micTimer.textContent = 'Aguarde transcrição e resposta...';
+        }
+    }
+
+    // Envio do arquivo de áudio para o endpoint de voz
+    async function sendVoiceAudio(audioBlob) {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'command.webm');
+
+        showTracePanel();
+        document.getElementById('traceTranscription').textContent = 'Transcrevendo áudio com Whisper...';
+        document.getElementById('traceTools').textContent = 'Aguardando decisão da IA...';
+        document.getElementById('traceReply').textContent = 'Processando...';
+
+        try {
+            const res = await fetch(`${API_BASE}/api/voice/process`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                displayVoiceResult(data);
+            } else {
+                throw new Error('Falha no processamento de voz');
+            }
+        } catch (e) {
+            console.error('Erro na requisição de voz:', e);
+            document.getElementById('traceReply').textContent = 'Erro ao processar áudio. Tente novamente.';
+        } finally {
+            micStatus.textContent = 'Clique no microfone para falar';
+            micTimer.textContent = 'Ex: "Gastei 45 reais no almoço hoje"';
+        }
+    }
+
+    function displayVoiceResult(data) {
+        document.getElementById('traceTranscription').textContent = data.transcription || '(Sem transcrição)';
+        
+        if (data.toolsCalled && data.toolsCalled.length > 0) {
+            document.getElementById('traceTools').innerHTML = data.toolsCalled.map(t => `<div>▶ ${t}</div>`).join('');
+        } else {
+            document.getElementById('traceTools').textContent = 'Nenhuma ferramenta direta foi necessária.';
+        }
+
+        document.getElementById('traceReply').textContent = data.replyText || '';
+
+        // Áudio sintetizado de resposta
+        if (data.audioBase64) {
+            const playerBox = document.getElementById('audioPlayerBox');
+            const player = document.getElementById('audioPlayer');
+            playerBox.style.display = 'flex';
+            player.src = `data:${data.audioContentType || 'audio/mpeg'};base64,${data.audioBase64}`;
+            player.play().catch(e => console.log('Autoplay bloqueado pelo navegador:', e));
+        }
+
+        if (data.updatedSummary) {
+            renderSummary(data.updatedSummary);
+        } else {
+            loadFinancialData();
+        }
+    }
+
+    // Envio por texto
+    async function sendTextMessage() {
+        const input = document.getElementById('textInput');
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+
+        sendQuickText(text);
+    }
+
+    async function sendQuickText(text) {
+        showTracePanel();
+        document.getElementById('traceSttBox').style.display = 'none';
+        document.getElementById('traceTools').textContent = 'Aguardando decisão da IA...';
+        document.getElementById('traceReply').textContent = 'Consultando assistente...';
+
+        try {
+            const res = await fetch(`${API_BASE}/api/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                
+                if (data.toolsCalled && data.toolsCalled.length > 0) {
+                    document.getElementById('traceTools').innerHTML = data.toolsCalled.map(t => `<div>▶ ${t}</div>`).join('');
+                } else {
+                    document.getElementById('traceTools').textContent = 'Consulta direta.';
+                }
+
+                document.getElementById('traceReply').textContent = data.reply || '';
+
+                if (data.updatedSummary) {
+                    renderSummary(data.updatedSummary);
+                } else {
+                    loadFinancialData();
+                }
+
+                // Sintetiza áudio para a resposta textual se desejado
+                fetch(`${API_BASE}/api/voice/speak`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: data.reply })
+                }).then(async r => {
+                    if (r.ok) {
+                        const blob = await r.blob();
+                        const url = URL.createObjectURL(blob);
+                        const playerBox = document.getElementById('audioPlayerBox');
+                        const player = document.getElementById('audioPlayer');
+                        playerBox.style.display = 'flex';
+                        player.src = url;
+                        player.play().catch(err => console.log('Autoplay:', err));
+                    }
+                }).catch(err => console.log('Erro TTS:', err));
+
+            }
+        } catch (e) {
+            console.error('Erro no envio textual:', e);
+            document.getElementById('traceReply').textContent = 'Erro ao processar mensagem.';
+        }
+    }
+
+    function showTracePanel() {
+        document.getElementById('traceContainer').style.display = 'flex';
+        document.getElementById('traceSttBox').style.display = 'flex';
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') {
+            sendTextMessage();
+        }
+    }
+</script>
+
+</body>
+</html>
